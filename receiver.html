@@ -259,7 +259,7 @@ limitations under the License.
 
         }
 
-        function initMediaManager(mediaElement) {
+        function initMediaManager(mediaElement, mediaHostId) {
             // This class is used to send/receive media messages/events using the media protocol/namesapce (urn:x-cast:com.google.cast.media).
             var mediaManager = new cast.receiver.MediaManager(mediaElement);
 
@@ -541,8 +541,8 @@ limitations under the License.
             window.mediaElement3 = initMediaElement('receiverVideoElement3', false);
 
             window.mediaManager = initMediaManager(window.mediaElement);
-            //window.mediaManager2 = initMediaManager(window.mediaElement2);
-            //window.mediaManager3 = initMediaManager(window.mediaElement3);
+            window.mediaManager2 = initMediaManager(window.mediaElement2);
+            window.mediaManager3 = initMediaManager(window.mediaElement3);
 
             console.log('### Application Loaded. Starting system.');
             setHudMessage('applicationState','Loaded. Starting up.');
