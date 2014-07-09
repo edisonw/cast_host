@@ -259,6 +259,44 @@ limitations under the License.
 
         }
 
+        window.onload = function() {
+            cast.receiver.logger.setLevelValue(cast.receiver.LoggerLevel.DEBUG);
+            initCastReceiverManager();
+
+            window.mediaElement = initMediaElement('receiverVideoElement', true);
+            window.mediaElement2 = initMediaElement('receiverVideoElement2', false);
+            window.mediaElement3 = initMediaElement('receiverVideoElement3', false);
+
+            window.mediaManager = initMediaManager(window.mediaElement);
+            //window.mediaManager2 = initMediaManager(window.mediaElement2);
+            //window.mediaManager3 = initMediaManager(window.mediaElement3);            /**
+            / * ALTERNATIVE TO onVisibilityChanged
+             *
+             * Use this to know when the user switched away from the Cast device input. It depends on the TV
+             * Supporting CEC
+             **/
+            document.addEventListener('webkitvisibilitychange', function(){
+                if(document.webkithidden) {
+                    window.mediaElement.pause(); // Pause playback
+                    window.timeout = window.setTimeout(function(){window.close();}, 10000); // 10 Minute timeout
+                } else {
+                    window.mediaElement.play(); // Resume media playback
+                    window.clearTimeout(window.timeout); // Turn off the timeout
+                    window.timeout = null;
+                }
+            });
+
+
+            console.log('### Application Loaded. Starting system.');
+            setHudMessage('applicationState','Loaded. Starting up.');
+
+            var appConfig = new cast.receiver.CastReceiverManager.Config();
+            appConfig.maxInactivity = 6000; // 10 minutes for testing, use default 10sec in prod by not setting this value
+            window.castReceiverManager.start(appConfig);
+        }
+
+
+
         function initMediaManager(mediaElement) {
             // This class is used to send/receive media messages/events using the media protocol/namesapce (urn:x-cast:com.google.cast.media).
             var mediaManager = new cast.receiver.MediaManager(mediaElement);
@@ -528,28 +566,7 @@ limitations under the License.
                 }
 
             }
-
             return mediaManager;
-        }
-
-        window.onload = function() {
-            cast.receiver.logger.setLevelValue(cast.receiver.LoggerLevel.DEBUG);
-            initCastReceiverManager();
-
-            window.mediaElement = initMediaElement('receiverVideoElement', true);
-            window.mediaElement2 = initMediaElement('receiverVideoElement2', false);
-            window.mediaElement3 = initMediaElement('receiverVideoElement3', false);
-
-            window.mediaManager = initMediaManager(window.mediaElement);
-            //window.mediaManager2 = initMediaManager(window.mediaElement2);
-            //window.mediaManager3 = initMediaManager(window.mediaElement3);
-
-            console.log('### Application Loaded. Starting system.');
-            setHudMessage('applicationState','Loaded. Starting up.');
-
-            var appConfig = new cast.receiver.CastReceiverManager.Config();
-            appConfig.maxInactivity = 6000; // 10 minutes for testing, use default 10sec in prod by not setting this value
-            window.castReceiverManager.start(appConfig);
         }
     </script>
 </body>
