@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <!DOCTYPE html>
-<html>
+<html manifest="cache.manifest">
 <head>
     <title>Sample Media Receiver</title>
     <!--
@@ -305,7 +305,7 @@ limitations under the License.
 
         }
 
-        function initMediaManager() {
+        function initMediaManager(2) {
             // This class is used to send/receive media messages/events using the media protocol/namesapce (urn:x-cast:com.google.cast.media).
             window.mediaManager = new cast.receiver.MediaManager(window.mediaElement);
 
@@ -548,6 +548,8 @@ limitations under the License.
                             window.mediaPlayer.unload();
                         }
                     }
+
+                    customData = event.data['custom']
 
                     var initialTimeIndexSeconds = event.data['media']['currentTime'] || 0;
                     // TODO: real code would know what content it was going to access and this would not be here.
