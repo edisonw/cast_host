@@ -78,8 +78,8 @@ limitations under the License.
         <div>Media Protocol: <span id="mediaProtocol">Unknown</span></div>
     </div>
     <video loop id="receiverVideoElement"></video>
-    <video loop preLoad mute id="receiverVideoElement2" width="0px" height="0px"> </video>
-    <video loop preLoad mute id="receiverVideoElement3" width="0px" height="0px"> </video>
+    <video id="receiverVideoElement2" width="0px" height="0px"> </video>
+    <video id="receiverVideoElement3" width="0px" height="0px"> </video>
 
     <script type="text/javascript">
         "use strict";
@@ -95,36 +95,6 @@ limitations under the License.
 
         function setHudMessage(elementId, message) {
             document.getElementById(elementId).innerHTML = '' + JSON.stringify(message);
-        }
-
-        function initMessageBus() {        
-            /**
-             * Use the messageBus to listen for incoming messages on a virtual channel using a namespace string.
-             * Also use messageBus to send messages back to a sender or broadcast a message to all senders.
-             * You can check the cast.receiver.CastMessageBus.MessageType that a message bus processes though a call
-             * to getMessageType. As well, you get the namespace of a message bus by calling getNamespace()
-             */
-            window.messageBus = window.castReceiverManager.getCastMessageBus('urn:x-cast:com.google.devrel.custom');
-            /**
-             * The namespace urn:x-cast:com.google.devrel.custom is used to identify the protocol of showing/hiding
-             * the heads up display messages (The messages defined at the beginning of the html).
-             *
-             * The protocol consists of one string message: show
-             * In the case of the message value not being show - the assumed value is hide.
-             **/
-            window.messageBus.onMessage = function(event) {
-                console.log("### Message Bus - Media Message: " + JSON.stringify(event));
-                setHudMessage('messageBusMessage', event);
-
-                console.log("### CUSTOM MESSAGE: " + JSON.stringify(event));
-                // show/hide messages
-                console.log(event['data']);
-                if(event['data']==='show') {
-                    document.getElementById('messages').style.display = 'block';
-                } else {
-                    document.getElementById('messages').style.display = 'none';
-                }
-            }
         }
 
         function initMediaElement(elementId, autoplay) {
@@ -258,22 +228,6 @@ limitations under the License.
             }
 
             /**
-             * If provided, it processes the 'systemvolumechanged' event.
-             * Called to process the 'systemvolumechanged' event.
-             * @param {cast.receiver.CastReceiverManager.Event} event - can be null
-             *
-             * There is no default handler
-             */
-            window.castReceiverManager.onSystemVolumeChanged = function(event) {
-                console.log("### Cast Receiver Manager - System Volume Changed : " + JSON.stringify(event));
-                setHudMessage('castReceiverManagerMessage', 'System Volume Changed: ' + JSON.stringify(event));
-
-                // See cast.receiver.media.Volume
-                console.log("### Volume: " + event.data['level'] + " is muted? " + event.data['muted']);
-                setHudMessage('volumeMessage', 'Level: ' + event.data['level'] + ' -- muted? ' + event.data['muted']);
-            }
-
-            /**
              * Called to process the 'visibilitychanged' event.
              *
              * Fired when the visibility of the application has changed (for example
@@ -305,24 +259,24 @@ limitations under the License.
 
         }
 
-        function initMediaManager() {
+        function initMediaManager(mediaElement, mediaHostId) {
             // This class is used to send/receive media messages/events using the media protocol/namesapce (urn:x-cast:com.google.cast.media).
-            window.mediaManager = new cast.receiver.MediaManager(window.mediaElement);
+            var mediaManager = new cast.receiver.MediaManager(mediaElement);
 
             /**
              * Called when the media ends.
              *
              * mediaManager.resetMediaElement(cast.receiver.media.IdleReason.FINISHED);
              **/
-            window.mediaManager['onEndedOrig'] = window.mediaManager.onEnded;
+            mediaManager['onEndedOrig'] = mediaManager.onEnded;
             /**
              * Called when the media ends
              */
-            window.mediaManager.onEnded = function() {
+            mediaManager.onEnded = function() {
                 console.log("### Media Manager - ENDED: " + JSON.stringify(event));
                 setHudMessage('mediaManagerMessage', 'ENDED');
 
-                window.mediaManager['onEndedOrig']();
+                mediaManager['onEndedOrig']();
             }
 
             /**
@@ -330,16 +284,16 @@ limitations under the License.
              *
              * mediaManager.resetMediaElement(cast.receiver.media.IdleReason.ERROR)
              **/
-            window.mediaManager['onErrorOrig'] = window.mediaManager.onError;
+            mediaManager['onErrorOrig'] = mediaManager.onError;
             /**
              * Called when there is an error not triggered by a LOAD request
              * @param obj
              */
-            window.mediaManager.onError = function(obj) {
+            mediaManager.onError = function(obj) {
                 console.log("### Media Manager - error: " + JSON.stringify(obj));
                 setHudMessage('mediaManagerMessage', 'ERROR - ' + JSON.stringify(obj));
 
-                window.mediaManager['onErrorOrig'](obj);
+                mediaManager['onErrorOrig'](obj);
             }
 
             /**
@@ -347,16 +301,16 @@ limitations under the License.
              *
              * Sends a media status message to the requesting sender (event.data.requestId)
              **/
-            window.mediaManager['onGetStatusOrig'] = window.mediaManager.onGetStatus;
+            mediaManager['onGetStatusOrig'] = mediaManager.onGetStatus;
             /**
              * Processes the get status event.
              * @param event
              */
-            window.mediaManager.onGetStatus = function(event) {
+            mediaManager.onGetStatus = function(event) {
                 console.log("### Media Manager - GET STATUS: " + JSON.stringify(event));
                 setHudMessage('mediaManagerMessage', 'GET STATUS ' + JSON.stringify(event));
 
-                window.mediaManager['onGetStatusOrig'](event);
+                mediaManager['onGetStatusOrig'](event);
             }
 
             /**
@@ -365,16 +319,16 @@ limitations under the License.
              * mediaManager.resetMediaElement(cast.receiver.media.IdleReason.ERROR, false);
              * mediaManager.sendLoadError(cast.receiver.media.ErrorType.LOAD_FAILED);
              **/
-            window.mediaManager['onLoadMetadataErrorOrig'] = window.mediaManager.onLoadMetadataError;
+            mediaManager['onLoadMetadataErrorOrig'] = mediaManager.onLoadMetadataError;
             /**
              * Called when load has had an error, overridden to handle application specific logic.
              * @param event
              */
-            window.mediaManager.onLoadMetadataError = function(event) {
+            mediaManager.onLoadMetadataError = function(event) {
                 console.log("### Media Manager - LOAD METADATA ERROR: " + JSON.stringify(event));
                 setHudMessage('mediaManagerMessage', 'LOAD METADATA ERROR: ' + JSON.stringify(event));
 
-                window.mediaManager['onLoadMetadataErrorOrig'](event);
+                mediaManager['onLoadMetadataErrorOrig'](event);
             }
 
             /**
@@ -395,16 +349,16 @@ limitations under the License.
              * 2) When the application is not actually loading the media element (for
              *    example if LOAD is used to load an image).
              **/
-            window.mediaManager['onLoadMetadataOrig'] = window.mediaManager.onLoadMetadataLoaded;
+            mediaManager['onLoadMetadataOrig'] = mediaManager.onLoadMetadataLoaded;
             /**
              * Called when load has completed, overridden to handle application specific logic.
              * @param event
              */
-            window.mediaManager.onLoadMetadataLoaded = function(event) {
+            mediaManager.onLoadMetadataLoaded = function(event) {
                 console.log("### Media Manager - LOADED METADATA: " + JSON.stringify(event));
                 setHudMessage('mediaManagerMessage', 'LOADED METADATA: ' + JSON.stringify(event));
 
-                window.mediaManager['onLoadMetadataOrig'](event);
+                mediaManager['onLoadMetadataOrig'](event);
             }
 
             /**
@@ -413,12 +367,12 @@ limitations under the License.
              * mediaElement.pause();
              * Broadcast (without sending media information) to all senders that pause has happened.
              **/
-            window.mediaManager['onPauseOrig'] = window.mediaManager.onPause;
+            mediaManager['onPauseOrig'] = window.mediaManager.onPause;
             /**
              * Process pause event
              * @param event
              */
-            window.mediaManager.onPause = function(event) {
+            mediaManager.onPause = function(event) {
                 console.log("### Media Manager - PAUSE: " + JSON.stringify(event));
                 setHudMessage('mediaManagerMessage', 'PAUSE: ' + JSON.stringify(event));
 
@@ -431,16 +385,16 @@ limitations under the License.
              * mediaElement.play();
              *
              **/
-            window.mediaManager['onPlayOrig'] = window.mediaManager.onPlay;
+            mediaManager['onPlayOrig'] = mediaManager.onPlay;
             /**
              * Process play event
              * @param event
              */
-            window.mediaManager.onPlay = function(event) {
+            mediaManager.onPlay = function(event) {
                 console.log("### Media Manager - PLAY: " + JSON.stringify(event));
                 setHudMessage('mediaManagerMessage', 'PLAY: ' + JSON.stringify(event));
 
-                window.mediaManager['onPlayOrig'](event);
+                mediaManager['onPlayOrig'](event);
             }
 
             /**
@@ -451,16 +405,16 @@ limitations under the License.
              * the mediaElement is not paused, call mediaElement.pause().
              * Broadcast (without sending media information) to all senders that seek has happened.
              **/
-            window.mediaManager['onSeekOrig'] = window.mediaManager.onSeek;
+            mediaManager['onSeekOrig'] = window.mediaManager.onSeek;
             /**
              * Process seek event
              * @param event
              */
-            window.mediaManager.onSeek = function(event) {
+            mediaManager.onSeek = function(event) {
                 console.log("### Media Manager - SEEK: " + JSON.stringify(event));
                 setHudMessage('mediaManagerMessage', 'SEEK: ' + JSON.stringify(event));
 
-                window.mediaManager['onSeekOrig'](event);
+                mediaManager['onSeekOrig'](event);
             }
 
             /**
@@ -469,16 +423,16 @@ limitations under the License.
              * Checks event.data.volume.muted is defined and sets the mediaElement.muted to the value
              * Broadcasts (without sending media information) to all senders that the volume has changed.
              **/
-            window.mediaManager['onSetVolumeOrig'] = window.mediaManager.onSetVolume;
+            mediaManager['onSetVolumeOrig'] = mediaManager.onSetVolume;
             /**
              * Process set volume event
              * @param event
              */
-            window.mediaManager.onSetVolume = function(event) {
+            mediaManager.onSetVolume = function(event) {
                 console.log("### Media Manager - SET VOLUME: " + JSON.stringify(event));
                 setHudMessage('mediaManagerMessage', 'SET VOLUME: ' + JSON.stringify(event));
 
-                window.mediaManager['onSetVolumeOrig'](event);
+                mediaManager['onSetVolumeOrig'](event);
             }
 
             /**
@@ -492,16 +446,16 @@ limitations under the License.
              * developer wants to override the default behavior of onError, onStop or
              * onEnded, for example.
              **/
-            window.mediaManager['onStopOrig'] = window.mediaManager.onStop;
+            mediaManager['onStopOrig'] = mediaManager.onStop;
             /**
              * Process stop event
              * @param event
              */
-            window.mediaManager.onStop = function(event) {
+            mediaManager.onStop = function(event) {
                 console.log("### Media Manager - STOP: " + JSON.stringify(event));
                 setHudMessage('mediaManagerMessage', 'STOP: ' + JSON.stringify(event));
 
-                window.mediaManager['onStopOrig'](event);
+                mediaManager['onStopOrig'](event);
             }
 
             /**
@@ -515,12 +469,12 @@ limitations under the License.
              *   - if undefined sets mediaElement.autoplay = true
              *   - if has value then sets mediaElement.autoplay to that value
              **/
-            window.mediaManager['onLoadOrig'] = window.mediaManager.onLoad;
+            mediaManager['onLoadOrig'] = mediaManager.onLoad;
             /**
              * Processes the load event.
              * @param event
              */
-            window.mediaManager.onLoad = function(event) {
+            mediaManager.onLoad = function(event) {
                 console.log("### Media Manager - LOAD: " + JSON.stringify(event));
                 setHudMessage('mediaManagerMessage', 'LOAD ' + JSON.stringify(event));
 
@@ -529,19 +483,19 @@ limitations under the License.
                 // TODO - if there is no error call mediaManager.sendLoadCompleteComplete
                 // TODO - call mediaManager.setMediaInformation(MediaInformation)
 
-                if(window.mediaPlayer !== null) {
-                    window.mediaPlayer.unload(); // Ensure unload before loading again
+                if(mediaPlayer !== null) {
+                    mediaPlayer.unload(); // Ensure unload before loading again
                 }
 
                 if (event.data['media'] && event.data['media']['contentId']) {
-                    var url = event.data['media']['videoUrl'];
+                    var url = event.data['media']['contentId'];
 
-                    window.mediaHost = new cast.player.api.Host({
-                        'mediaElement': window.mediaElement,
+                    var mediaHost = new cast.player.api.Host({
+                        'mediaElement': mediaElement,
                         'url': url
                     });
 
-                    window.mediaHost.onError = function (errorCode) {
+                    mediaHost.onError = function (errorCode) {
                         console.error('### HOST ERROR - Fatal Error: code = ' + errorCode);
                         setHudMessage('mediaHostState', 'Fatal Error: code = ' + errorCode);
                         if (window.mediaPlayer !== null) {
@@ -558,109 +512,43 @@ limitations under the License.
 
                     var ext = ext = parser.pathname.split('.').pop();
                     if (ext === 'm3u8') {
-                        protocol =  cast.player.api.CreateHlsStreamingProtocol(window.mediaHost);
+                        protocol =  cast.player.api.CreateHlsStreamingProtocol(mediaHost);
                     } else if (ext === 'mpd') {
-                        protocol = cast.player.api.CreateDashStreamingProtocol(window.mediaHost);
+                        protocol = cast.player.api.CreateDashStreamingProtocol(mediaHost);
                     } else if (ext === 'ism/') {
-                        protocol = cast.player.api.CreateSmoothStreamingProtocol(window.mediaHost);
+                        protocol = cast.player.api.CreateSmoothStreamingProtocol(mediaHost);
                     }
                     console.log('### Media Protocol Identified as ' + ext);
                     setHudMessage('mediaProtocol', ext);
 
                     if (protocol === null) {
                         // Call on original handler
-                        window.mediaManager['onLoadOrig'](event); // Call on the original callback
-                    } else {
-                        // Advanced Playback - HLS, MPEG DASH, SMOOTH STREAMING
-                        // Player registers to listen to the media element events through the mediaHost property of the
-                        // mediaElement
-                        window.mediaPlayer = new cast.player.api.Player(window.mediaHost);
-                        window.mediaPlayer.load(protocol, initialTimeIndexSeconds);
+                        mediaManager['onLoadOrig'](event); // Call on the original callback
                     }
                 }
 
             }
+
+            return mediaManager;
         }
 
         window.onload = function() {
-            /**
-             * Sets the log verbosity level.
-             *
-             * Debug logging (all messages).
-             * DEBUG
-             *
-             * Verbose logging (sender messages).
-             * VERBOSE
-             *
-             * Info logging (events, general logs).
-             * INFO
-             *
-             * Error logging (errors).
-             * ERROR
-             *
-             * No logging.
-             * NONE
-             **/
             cast.receiver.logger.setLevelValue(cast.receiver.LoggerLevel.DEBUG);
+            initCastReceiverManager();
 
             window.mediaElement = initMediaElement('receiverVideoElement', true);
             window.mediaElement2 = initMediaElement('receiverVideoElement2', false);
             window.mediaElement3 = initMediaElement('receiverVideoElement3', false);
 
-            initCastReceiverManager();           
-
-            /**
-             * ALTERNATIVE TO onVisibilityChanged
-             *
-             * Use this to know when the user switched away from the Cast device input. It depends on the TV
-             * Supporting CEC
-             **/
-            document.addEventListener('webkitvisibilitychange', function(){
-                if(document.webkithidden) {
-                    window.mediaElement.pause(); // Pause playback
-                    window.timeout = window.setTimeout(function(){window.close();}, 10000); // 10 Minute timeout
-                } else {
-                    window.mediaElement.play(); // Resume media playback
-                    window.clearTimeout(window.timeout); // Turn off the timeout
-                    window.timeout = null;
-                }
-            });
-
-            initMessageBus();
-
-            initMediaManager();
+            window.mediaManager = initMediaManager(window.mediaElement);
+            window.mediaManager2 = initMediaManager(window.mediaElement2);
+            window.mediaManager3 = initMediaManager(window.mediaElement3);
 
             console.log('### Application Loaded. Starting system.');
             setHudMessage('applicationState','Loaded. Starting up.');
 
-            /**
-             * Application config
-             **/
             var appConfig = new cast.receiver.CastReceiverManager.Config();
-
-            /**
-             * Text that represents the application status. It should meet
-             * internationalization rules as may be displayed by the sender application.
-             * @type {string|undefined}
-             **/
-            appConfig.statusText = 'Ready to play';
-
-            /**
-             * Maximum time in seconds before closing an idle
-             * sender connection. Setting this value enables a heartbeat message to keep
-             * the connection alive. Used to detect unresponsive senders faster than
-             * typical TCP timeouts. The minimum value is 5 seconds, there is no upper
-             * bound enforced but practically it's minutes before platform TCP timeouts
-             * come into play. Default value is 10 seconds.
-             * @type {number|undefined}
-             **/
             appConfig.maxInactivity = 6000; // 10 minutes for testing, use default 10sec in prod by not setting this value
-
-            /**
-             * Initializes the system manager. The application should call this method when
-             * it is ready to start receiving messages, typically after registering
-             * to listen for the events it is interested on.
-             */
             window.castReceiverManager.start(appConfig);
         }
     </script>
