@@ -16,7 +16,7 @@ limitations under the License.
 <!DOCTYPE html>
 <html manifest="cache.manifest">
 <head>
-    <title>Sample Media Receiver</title>
+    <title>Vine Cast</title>
     <!--
         Cast APIs
     -->
@@ -65,7 +65,7 @@ limitations under the License.
 </head>
 <body>
     <div id="messages">
-        <div id="title">Sample Media Receiver HUD</div>
+        <div id="title">Vine Cast</div>
         <div>Application State: <span id="applicationState">-</span></div>
         <div>Session Count: <span id="sessionCount">0</span></div>
         <div>Media Element State: <span  id="mediaElementState">-</span></div>
@@ -76,6 +76,10 @@ limitations under the License.
         <div>Host State: <span id="mediaHostState">Unknown</span></div>
         <div>Media Type: <span id="mediaType">Unkown</span></div>
         <div>Media Protocol: <span id="mediaProtocol">Unknown</span></div>
+
+
+        <div>Author: <span id="postAuthor">Unknown</span></div>
+        <div><img id="postThumbnail">Unknown</img></div>
     </div>
     <video loop id="receiverVideoElement"></video>
     <video loop preLoad mute id="receiverVideoElement2" width="0px" height="0px"> </video>
@@ -556,10 +560,15 @@ limitations under the License.
                     var prefetches = customData.prefetches;
 
                     console.log("Author: " + author);
+
+                    document.getElementById('postAuthor').innerHTML = author;
+
                     console.log("Thumbnail: " + thumbnail);
 
+                    document.getElementById('postThumbnail').src = thumbnail;
+
                     if (prefetches) {
-                        console.log("Prefetches: " + prefetches.length);
+                        console.log("Prefetches: " + prefetches);
                     }
                     
                     var initialTimeIndexSeconds = event.data['media']['currentTime'] || 0;
