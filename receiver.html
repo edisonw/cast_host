@@ -549,8 +549,19 @@ limitations under the License.
                         }
                     }
 
-                    customData = event.data['custom']
+                    var customData = event.data['media']['customData'];
 
+                    var author = customData.author;
+                    var thumbnail = customData.thumbnail;
+                    var prefetches = customData.prefetches;
+
+                    console.log("Author: " + author);
+                    console.log("Thumbnail: " + thumbnail);
+
+                    if (prefetches) {
+                        console.log("Prefetches: " + prefetches.length);
+                    }
+                    
                     var initialTimeIndexSeconds = event.data['media']['currentTime'] || 0;
                     // TODO: real code would know what content it was going to access and this would not be here.
                     var protocol = null;
