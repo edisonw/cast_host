@@ -571,6 +571,8 @@ limitations under the License.
 
                     if (protocol === null) {
                         // Call on original handler
+                        console.log(event);
+                        console.log(window.mediaManager['onLoadOrig']);
                         window.mediaManager['onLoadOrig'](event); // Call on the original callback
                     } else {
                         // Advanced Playback - HLS, MPEG DASH, SMOOTH STREAMING
